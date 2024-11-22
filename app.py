@@ -8,6 +8,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 
+
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
@@ -56,13 +57,31 @@ def login():
         email = request.form['email']
         password = request.form['password']
         user = User.query.filter_by(email=email).first()
+        
+        # 驗證帳號和密碼
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('dashboard'))
+            flash('登入成功！', 'success')  # 儲存成功訊息
+            return redirect(url_for('dashboard'))  # 重定向到使用者專區
         else:
-            flash('登入失敗，請檢查帳號或密碼。', 'danger')
-    pass
+            flash('帳號或密碼錯誤，請重新輸入。', 'danger')  # 登入失敗訊息
+
     return render_template('login.html')
+
+# 忘記密碼
+@app.route("/forgot_password", methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # 模擬寄送驗證信
+            flash(f'驗證連結已發送到您的信箱: {email}，請使用連結重設密碼。', 'success')
+        else:
+            flash('此 Email 未註冊，請確認後重試。', 'danger')
+
+    return render_template('forgot_password.html')
 
 # 使用者專區 (任務管理)
 @app.route("/dashboard")
