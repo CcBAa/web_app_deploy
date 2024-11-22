@@ -41,14 +41,25 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
-        password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
-        user = User(username=username, email=email, password=password)
+        password = request.form['password']
+
+        # 檢查 Email 是否已存在
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('此 Email 已經註冊過帳號，請使用其他 Email。', 'danger')
+            return render_template('register.html')
+
+        # 如果 Email 不存在，繼續註冊
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        user = User(username=username, email=email, password=hashed_password)
         db.session.add(user)
         db.session.commit()
+
         flash('註冊成功！您現在可以登入。', 'success')
         return redirect(url_for('login'))
-    pass
+
     return render_template('register.html')
+
 
 # 登入
 @app.route("/login", methods=['GET', 'POST'])
